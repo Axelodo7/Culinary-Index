@@ -1,7 +1,15 @@
+import logging
 import os
 import time
 from flask import Flask, render_template, request, jsonify
 from scrapers.engine import run_all_scrapers
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(name)s %(levelname)s: %(message)s",
+)
+logger = logging.getLogger("app")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "culinary-index-secret")
@@ -23,17 +31,18 @@ def search():
 
     try:
         results = run_all_scrapers(query, timeout=25)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Search failed for '{query}': {e}")
         results = []
 
     elapsed = round(time.time() - start, 1)
+    logger.info(f"Search '{query}': {len(results)} results in {elapsed}s")
 
     if source_filter == "primary":
         results = [r for r in results if "Web:" not in r["source"]]
     elif source_filter == "web":
         results = [r for r in results if "Web:" in r["source"]]
 
-    # Separate primary vs web for tabs
     primary = [r for r in results if "Web:" not in r["source"]]
     web = [r for r in results if "Web:" in r["source"]]
 
@@ -55,7 +64,8 @@ def api_search():
         return jsonify({"error": "q parameter required"}), 400
     try:
         results = run_all_scrapers(query, timeout=25)
-    except Exception:
+    except Exception as e:
+        logger.error(f"API search failed for '{query}': {e}")
         results = []
     return jsonify({"query": query, "count": len(results), "results": results})
 

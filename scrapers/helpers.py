@@ -1,7 +1,10 @@
+import logging
 import random
 import requests
 
 REQUEST_TIMEOUT = 15
+
+logger = logging.getLogger("scrapers")
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -27,7 +30,7 @@ def get_headers(rotate_ua=True):
 
 
 def safe_request(url, proxy_manager=None, rotate_ua=True, method="get", **kwargs):
-    """Make a request with proxy rotation and retry logic."""
+    """Make a request with proxy rotation, retry logic, and logging."""
     headers = get_headers(rotate_ua)
     proxy_dict = proxy_manager.get_proxy_dict() if proxy_manager else None
 
@@ -45,10 +48,33 @@ def safe_request(url, proxy_manager=None, rotate_ua=True, method="get", **kwargs
                 )
             resp.raise_for_status()
             return resp
-        except Exception:
+        except requests.exceptions.Timeout:
+            logger.warning(f"Timeout fetching {url} (attempt {attempt + 1})")
             if proxy_manager and proxy_dict:
                 proxy_manager.mark_dead(proxy_dict)
                 proxy_dict = proxy_manager.get_proxy_dict()
                 continue
-            raise
+            return None
+        except requests.exceptions.HTTPError as e:
+            status = e.response.status_code if e.response else "?"
+            logger.warning(f"HTTP {status} from {url} (attempt {attempt + 1})")
+            if proxy_manager and proxy_dict:
+                proxy_manager.mark_dead(proxy_dict)
+                proxy_dict = proxy_manager.get_proxy_dict()
+                continue
+            return None
+        except requests.exceptions.ConnectionError:
+            logger.warning(f"Connection error to {url} (attempt {attempt + 1})")
+            if proxy_manager and proxy_dict:
+                proxy_manager.mark_dead(proxy_dict)
+                proxy_dict = proxy_manager.get_proxy_dict()
+                continue
+            return None
+        except Exception as e:
+            logger.warning(f"Error fetching {url}: {type(e).__name__}: {e}")
+            if proxy_manager and proxy_dict:
+                proxy_manager.mark_dead(proxy_dict)
+                proxy_dict = proxy_manager.get_proxy_dict()
+                continue
+            return None
     return None
