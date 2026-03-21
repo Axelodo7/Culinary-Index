@@ -1,11 +1,11 @@
 """
 The Culinary Index - Recipe Aggregator & Scraper
-Desktop application that searches Food Fusion, SuperChef, Tasty, and the web.
+Desktop: CustomTkinter (dark theme). Android/Pydroid 3: standard tkinter.
 """
 
-import ctypes
 import json
 import os
+import platform
 import sys
 import random
 import threading
@@ -15,14 +15,26 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import quote_plus, urlparse
 
-import customtkinter as ctk
 import requests
 from bs4 import BeautifulSoup
 
 # ---------------------------------------------------------------------------
-# Fix Windows taskbar icon BEFORE creating any window
+# GUI compatibility layer (handles desktop CustomTkinter + Android tkinter)
 # ---------------------------------------------------------------------------
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("culinaryindex.app.1")
+from gui_compat import (
+    ANDROID, USE_CTK,
+    AppRoot, AppFrame, AppLabel, AppEntry, AppButton,
+    AppCheckBox, AppRadioButton, AppTextbox, AppProgressBar,
+    AppScrollableFrame, AppTabView, AppToplevel,
+    StringVar, BooleanVar,
+    apply_dark_theme, app_geometry, app_minsize,
+    app_set_icon, app_set_taskbar_id, make_font,
+)
+
+# ---------------------------------------------------------------------------
+# Platform setup
+# ---------------------------------------------------------------------------
+app_set_taskbar_id()
 
 # ---------------------------------------------------------------------------
 # Paths & constants
@@ -492,16 +504,19 @@ def search_web(query: str, proxy_manager=None, rotate_ua=True) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def _patch_ctk_icon():
-    """Prevent CustomTkinter from overriding our taskbar/window icon."""
+    """Prevent CustomTkinter from overriding our taskbar/window icon (desktop only)."""
+    if not USE_CTK:
+        return
     try:
-        if hasattr(ctk.CTk, "_windows_set_titlebar_icon"):
+        import customtkinter as _ctk
+        if hasattr(_ctk.CTk, "_windows_set_titlebar_icon"):
             def patched(self):
                 try:
                     if ICON_PATH.exists():
                         self.iconbitmap(str(ICON_PATH))
                 except Exception:
                     pass
-            ctk.CTk._windows_set_titlebar_icon = patched
+            _ctk.CTk._windows_set_titlebar_icon = patched
     except Exception:
         pass
 
@@ -510,7 +525,7 @@ def _patch_ctk_icon():
 # GUI Application
 # ---------------------------------------------------------------------------
 
-class CulinaryIndexApp(ctk.CTk):
+class CulinaryIndexApp(AppRoot):
     def __init__(self):
         _patch_ctk_icon()
         super().__init__()
@@ -525,19 +540,12 @@ class CulinaryIndexApp(ctk.CTk):
         self._result_widgets: list = []
 
         self.title(APP_NAME)
-        self.geometry(self.settings.get("window_geometry", "960x720"))
-        self.minsize(750, 550)
+        app_geometry(self, self.settings.get("window_geometry", "960x720"))
+        app_minsize(self, 750, 550)
+        app_set_icon(self, ICON_PATH)
 
-        # Set icon
-        try:
-            if ICON_PATH.exists():
-                self.iconbitmap(str(ICON_PATH))
-        except Exception:
-            pass
-
-        # Configure dark theme colors
-        ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
+        # Configure dark theme
+        apply_dark_theme(self)
 
         self._build_ui()
 
@@ -550,37 +558,37 @@ class CulinaryIndexApp(ctk.CTk):
         self.grid_rowconfigure(2, weight=1)
 
         # --- Header ---
-        header = ctk.CTkFrame(self, fg_color="transparent", height=50)
+        header = AppFrame(self, fg_color="transparent", height=50)
         header.grid(row=0, column=0, sticky="ew", padx=15, pady=(12, 0))
         header.grid_columnconfigure(0, weight=1)
 
-        title_label = ctk.CTkLabel(
-            header, text=APP_NAME, font=ctk.CTkFont(size=22, weight="bold"),
+        title_label = AppLabel(
+            header, text=APP_NAME, font=make_font(22, "bold"),
             text_color="#4a8fd4",
         )
         title_label.grid(row=0, column=0, sticky="w")
 
         # --- Search bar ---
-        search_frame = ctk.CTkFrame(self, fg_color="transparent")
+        search_frame = AppFrame(self, fg_color="transparent")
         search_frame.grid(row=1, column=0, sticky="ew", padx=15, pady=(8, 5))
         search_frame.grid_columnconfigure(0, weight=1)
 
-        self.search_var = ctk.StringVar()
-        self.search_entry = ctk.CTkEntry(
+        self.search_var = StringVar()
+        self.search_entry = AppEntry(
             search_frame,
             textvariable=self.search_var,
             placeholder_text="Search recipes... (e.g. chicken, biryani, pasta)",
-            font=ctk.CTkFont(size=14),
+            font=make_font(14),
             height=42,
             corner_radius=8,
         )
         self.search_entry.grid(row=0, column=0, sticky="ew", padx=(0, 8))
         self.search_entry.bind("<Return>", lambda e: self._on_search())
 
-        self.search_btn = ctk.CTkButton(
+        self.search_btn = AppButton(
             search_frame,
             text="Search",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=make_font(14, "bold"),
             height=42,
             width=110,
             corner_radius=8,
@@ -591,7 +599,7 @@ class CulinaryIndexApp(ctk.CTk):
         self.search_btn.grid(row=0, column=1)
 
         # --- Tab view ---
-        self.tabview = ctk.CTkTabview(self, corner_radius=8)
+        self.tabview = AppTabView(self, corner_radius=8)
         self.tabview.grid(row=2, column=0, sticky="nsew", padx=15, pady=5)
 
         self.tab_primary = self.tabview.add("Primary Results")
@@ -603,22 +611,22 @@ class CulinaryIndexApp(ctk.CTk):
         self._build_settings_tab()
 
         # --- Status bar ---
-        self.status_frame = ctk.CTkFrame(self, fg_color="transparent", height=28)
+        self.status_frame = AppFrame(self, fg_color="transparent", height=28)
         self.status_frame.grid(row=3, column=0, sticky="ew", padx=15, pady=(0, 8))
         self.status_frame.grid_columnconfigure(0, weight=1)
 
-        self.status_var = ctk.StringVar(value="Ready. Enter a recipe name to search.")
-        self.status_label = ctk.CTkLabel(
+        self.status_var = StringVar(value="Ready. Enter a recipe name to search.")
+        self.status_label = AppLabel(
             self.status_frame,
             textvariable=self.status_var,
-            font=ctk.CTkFont(size=12),
+            font=make_font(12),
             text_color="#888888",
             anchor="w",
         )
         self.status_label.grid(row=0, column=0, sticky="w")
 
         # Progress bar (hidden by default)
-        self.progress = ctk.CTkProgressBar(self.status_frame, width=150, height=10)
+        self.progress = AppProgressBar(self.status_frame, width=150, height=10)
         self.progress.grid(row=0, column=1, sticky="e", padx=(10, 0))
         self.progress.set(0)
         self.progress.grid_remove()
@@ -631,22 +639,22 @@ class CulinaryIndexApp(ctk.CTk):
         self.tab_primary.grid_rowconfigure(1, weight=1)
 
         # Source indicators
-        self.source_frame = ctk.CTkFrame(self.tab_primary, fg_color="transparent", height=30)
+        self.source_frame = AppFrame(self.tab_primary, fg_color="transparent", height=30)
         self.source_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=(5, 2))
 
         self.source_indicators = {}
         for i, (key, name) in enumerate(
             [("foodfusion", "Food Fusion"), ("superchef", "SuperChef"), ("tasty", "Tasty")]
         ):
-            dot = ctk.CTkLabel(
+            dot = AppLabel(
                 self.source_frame, text=f"  {name}",
-                font=ctk.CTkFont(size=11), text_color="#666666",
+                font=make_font(11), text_color="#666666",
             )
             dot.grid(row=0, column=i, padx=8, sticky="w")
             self.source_indicators[key] = dot
 
         # Scrollable results area
-        self.primary_scroll = ctk.CTkScrollableFrame(
+        self.primary_scroll = AppScrollableFrame(
             self.tab_primary, corner_radius=0, fg_color="transparent",
         )
         self.primary_scroll.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
@@ -656,7 +664,7 @@ class CulinaryIndexApp(ctk.CTk):
         self.tab_web.grid_columnconfigure(0, weight=1)
         self.tab_web.grid_rowconfigure(0, weight=1)
 
-        self.web_scroll = ctk.CTkScrollableFrame(
+        self.web_scroll = AppScrollableFrame(
             self.tab_web, corner_radius=0, fg_color="transparent",
         )
         self.web_scroll.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
@@ -668,9 +676,9 @@ class CulinaryIndexApp(ctk.CTk):
         row = 0
 
         # Sources section
-        sources_label = ctk.CTkLabel(
+        sources_label = AppLabel(
             self.tab_settings, text="Recipe Sources",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            font=make_font(16, "bold"),
         )
         sources_label.grid(row=row, column=0, sticky="w", padx=20, pady=(15, 5))
         row += 1
@@ -682,44 +690,44 @@ class CulinaryIndexApp(ctk.CTk):
             ("tasty", "Tasty (tasty.co)"),
             ("web", "Web Search (DuckDuckGo)"),
         ]:
-            var = ctk.BooleanVar(value=self.settings["sources"].get(key, True))
-            cb = ctk.CTkCheckBox(
+            var = BooleanVar(value=self.settings["sources"].get(key, True))
+            cb = AppCheckBox(
                 self.tab_settings, text=name, variable=var,
-                font=ctk.CTkFont(size=13), checkbox_width=22, checkbox_height=22,
+                font=make_font(13), checkbox_width=22, checkbox_height=22,
             )
             cb.grid(row=row, column=0, sticky="w", padx=30, pady=3)
             self.source_vars[key] = var
             row += 1
 
         # Separator
-        sep1 = ctk.CTkFrame(self.tab_settings, height=1, fg_color="#333333")
+        sep1 = AppFrame(self.tab_settings, height=1, fg_color="#333333")
         sep1.grid(row=row, column=0, sticky="ew", padx=20, pady=10)
         row += 1
 
         # Proxy section
-        proxy_label = ctk.CTkLabel(
+        proxy_label = AppLabel(
             self.tab_settings, text="Proxy Settings",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            font=make_font(16, "bold"),
         )
         proxy_label.grid(row=row, column=0, sticky="w", padx=20, pady=(5, 5))
         row += 1
 
-        self.proxy_mode_var = ctk.StringVar(value=self.settings.get("proxy_mode", "none"))
+        self.proxy_mode_var = StringVar(value=self.settings.get("proxy_mode", "none"))
         for mode, label in [
             ("none", "None (direct requests) - Recommended"),
             ("free", "Free rotating proxies (auto-fetched)"),
             ("custom", "Custom proxy list"),
         ]:
-            rb = ctk.CTkRadioButton(
+            rb = AppRadioButton(
                 self.tab_settings, text=label, variable=self.proxy_mode_var, value=mode,
-                font=ctk.CTkFont(size=13),
+                font=make_font(13),
             )
             rb.grid(row=row, column=0, sticky="w", padx=30, pady=3)
             row += 1
 
         # Custom proxy text box
-        self.custom_proxy_text = ctk.CTkTextbox(
-            self.tab_settings, height=80, font=ctk.CTkFont(size=12, family="Consolas"),
+        self.custom_proxy_text = AppTextbox(
+            self.tab_settings, height=80, font=make_font(12, family="Consolas"),
             corner_radius=6,
         )
         self.custom_proxy_text.grid(row=row, column=0, sticky="ew", padx=30, pady=5)
@@ -728,17 +736,17 @@ class CulinaryIndexApp(ctk.CTk):
         )
         row += 1
 
-        self.proxy_status_var = ctk.StringVar(value="Proxy status: not tested")
-        proxy_status = ctk.CTkLabel(
+        self.proxy_status_var = StringVar(value="Proxy status: not tested")
+        proxy_status = AppLabel(
             self.tab_settings, textvariable=self.proxy_status_var,
-            font=ctk.CTkFont(size=12), text_color="#888888",
+            font=make_font(12), text_color="#888888",
         )
         proxy_status.grid(row=row, column=0, sticky="w", padx=30, pady=(0, 5))
         row += 1
 
-        refresh_btn = ctk.CTkButton(
+        refresh_btn = AppButton(
             self.tab_settings, text="Refresh Proxies", width=150, height=32,
-            font=ctk.CTkFont(size=12),
+            font=make_font(12),
             fg_color="#4a6fa5", hover_color="#5a8fc5",
             command=self._on_refresh_proxies,
         )
@@ -746,48 +754,48 @@ class CulinaryIndexApp(ctk.CTk):
         row += 1
 
         # Separator
-        sep2 = ctk.CTkFrame(self.tab_settings, height=1, fg_color="#333333")
+        sep2 = AppFrame(self.tab_settings, height=1, fg_color="#333333")
         sep2.grid(row=row, column=0, sticky="ew", padx=20, pady=10)
         row += 1
 
         # Anti-block section
-        anti_label = ctk.CTkLabel(
+        anti_label = AppLabel(
             self.tab_settings, text="Anti-Block Settings",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            font=make_font(16, "bold"),
         )
         anti_label.grid(row=row, column=0, sticky="w", padx=20, pady=(5, 5))
         row += 1
 
-        self.rotate_ua_var = ctk.BooleanVar(value=self.settings.get("rotate_ua", True))
-        ua_cb = ctk.CTkCheckBox(
+        self.rotate_ua_var = BooleanVar(value=self.settings.get("rotate_ua", True))
+        ua_cb = AppCheckBox(
             self.tab_settings,
             text="Rotate browser User-Agent headers (anti-detection)",
             variable=self.rotate_ua_var,
-            font=ctk.CTkFont(size=13), checkbox_width=22, checkbox_height=22,
+            font=make_font(13), checkbox_width=22, checkbox_height=22,
         )
         ua_cb.grid(row=row, column=0, sticky="w", padx=30, pady=3)
         row += 1
 
         # Separator
-        sep3 = ctk.CTkFrame(self.tab_settings, height=1, fg_color="#333333")
+        sep3 = AppFrame(self.tab_settings, height=1, fg_color="#333333")
         sep3.grid(row=row, column=0, sticky="ew", padx=20, pady=10)
         row += 1
 
         # Action buttons
-        btn_frame = ctk.CTkFrame(self.tab_settings, fg_color="transparent")
+        btn_frame = AppFrame(self.tab_settings, fg_color="transparent")
         btn_frame.grid(row=row, column=0, sticky="w", padx=20, pady=5)
 
-        save_btn = ctk.CTkButton(
+        save_btn = AppButton(
             btn_frame, text="Save Settings", width=140, height=36,
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=make_font(13, "bold"),
             fg_color="#4a6fa5", hover_color="#5a8fc5",
             command=self._on_save_settings,
         )
         save_btn.grid(row=0, column=0, padx=(0, 10))
 
-        clear_btn = ctk.CTkButton(
+        clear_btn = AppButton(
             btn_frame, text="Clear All Results", width=140, height=36,
-            font=ctk.CTkFont(size=13),
+            font=make_font(13),
             fg_color="#666666", hover_color="#888888",
             command=self._on_clear_results,
         )
@@ -920,13 +928,13 @@ class CulinaryIndexApp(ctk.CTk):
                 )
 
     def _add_result_card(self, parent, result: dict):
-        card = ctk.CTkFrame(parent, corner_radius=8, fg_color="#2b2b3d", border_width=1, border_color="#3a3a4d")
+        card = AppFrame(parent, corner_radius=8, fg_color="#2b2b3d", border_width=1, border_color="#3a3a4d")
         card.grid(sticky="ew", padx=5, pady=4)
         card.grid_columnconfigure(0, weight=1)
 
         # Title
-        title_label = ctk.CTkLabel(
-            card, text=result["title"], font=ctk.CTkFont(size=14, weight="bold"),
+        title_label = AppLabel(
+            card, text=result["title"], font=make_font(14, "bold"),
             anchor="w", wraplength=500,
         )
         title_label.grid(row=0, column=0, sticky="w", padx=12, pady=(10, 2))
@@ -935,8 +943,8 @@ class CulinaryIndexApp(ctk.CTk):
         info_text = f"Source: {result['source']}"
         if result.get("prep_time"):
             info_text += f"    Prep: {result['prep_time']}"
-        info_label = ctk.CTkLabel(
-            card, text=info_text, font=ctk.CTkFont(size=11),
+        info_label = AppLabel(
+            card, text=info_text, font=make_font(11),
             text_color="#888888", anchor="w",
         )
         info_label.grid(row=1, column=0, sticky="w", padx=12, pady=(0, 2))
@@ -945,16 +953,16 @@ class CulinaryIndexApp(ctk.CTk):
         url_text = result["url"]
         if len(url_text) > 65:
             url_text = url_text[:62] + "..."
-        url_label = ctk.CTkLabel(
-            card, text=url_text, font=ctk.CTkFont(size=10),
+        url_label = AppLabel(
+            card, text=url_text, font=make_font(10),
             text_color="#5a6a7a", anchor="w",
         )
         url_label.grid(row=2, column=0, sticky="w", padx=12, pady=(0, 8))
 
         # Open button
-        open_btn = ctk.CTkButton(
+        open_btn = AppButton(
             card, text="Open Recipe", width=110, height=30,
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=make_font(12, "bold"),
             fg_color="#4a6fa5", hover_color="#5a8fc5", corner_radius=6,
             command=lambda u=result["url"]: webbrowser.open(u),
         )
@@ -1003,7 +1011,7 @@ class CulinaryIndexApp(ctk.CTk):
         self.status_var.set("Settings saved.")
 
     def _show_warning(self, msg: str):
-        dialog = ctk.CTkToplevel(self)
+        dialog = AppToplevel(self)
         dialog.title("Warning")
         dialog.geometry("320x140")
         dialog.resizable(False, False)
@@ -1015,12 +1023,12 @@ class CulinaryIndexApp(ctk.CTk):
         except Exception:
             pass
 
-        label = ctk.CTkLabel(
-            dialog, text=msg, font=ctk.CTkFont(size=13), wraplength=280,
+        label = AppLabel(
+            dialog, text=msg, font=make_font(13), wraplength=280,
         )
         label.pack(pady=(25, 15), padx=20)
 
-        ok_btn = ctk.CTkButton(
+        ok_btn = AppButton(
             dialog, text="OK", width=80, height=32,
             command=dialog.destroy,
         )
