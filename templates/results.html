@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ query }} - The Culinary Index{% endblock %}
+
+{% block content %}
+<form class="search-bar" action="/search" method="GET">
+  <input type="text" name="q" value="{{ query }}" autofocus required>
+  <button type="submit">Search</button>
+</form>
+
+<div class="status-bar">
+  <span>{{ total_count }} results for "{{ query }}" ({{ elapsed }}s)</span>
+  <span>Bookmarks: <span id="bookmark-count">0</span></span>
+</div>
+
+<!-- CSS-only tabs -->
+<input type="radio" name="tabs" id="tab-primary" {% if source_filter != 'web' %}checked{% endif %} hidden>
+<input type="radio" name="tabs" id="tab-web" {% if source_filter == 'web' %}checked{% endif %} hidden>
+<input type="radio" name="tabs" id="tab-bookmarks" hidden>
+
+<div class="tabs">
+  <label for="tab-primary">Primary ({{ primary_results|length }})</label>
+  <label for="tab-web">Web ({{ web_results|length }})</label>
+  <label for="tab-bookmarks">Bookmarks</label>
+</div>
+
+<div class="tab-content primary">
+  {% if primary_results %}
+  <div class="results-grid">
+    {% for r in primary_results %}
+      <div class="result-card"
+           data-url="{{ r.url }}"
+           data-title="{{ r.title }}"
+           data-source="{{ r.source }}"
+           data-prep-time="{{ r.prep_time }}">
+        <h3>{{ r.title }}</h3>
+        <p class="meta">
+          {{ r.source }}
+          {% if r.prep_time %} &middot; {{ r.prep_time }}{% endif %}
+        </p>
+        <p class="url-preview">{{ r.url }}</p>
+        <div class="card-actions">
+          <a href="{{ r.url }}" target="_blank" rel="noopener" class="btn-open">Open Recipe</a>
+          <button class="btn-bookmark" type="button" title="Bookmark">&#9734;</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="no-results">No primary results found for "{{ query }}".</p>
+  {% endif %}
+</div>
+
+<div class="tab-content web">
+  {% if web_results %}
+  <div class="results-grid">
+    {% for r in web_results %}
+      <div class="result-card"
+           data-url="{{ r.url }}"
+           data-title="{{ r.title }}"
+           data-source="{{ r.source }}"
+           data-prep-time="{{ r.prep_time }}">
+        <h3>{{ r.title }}</h3>
+        <p class="meta">{{ r.source }}</p>
+        <p class="url-preview">{{ r.url }}</p>
+        <div class="card-actions">
+          <a href="{{ r.url }}" target="_blank" rel="noopener" class="btn-open">Open Recipe</a>
+          <button class="btn-bookmark" type="button" title="Bookmark">&#9734;</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="no-results">No web results found for "{{ query }}".</p>
+  {% endif %}
+</div>
+
+<div class="tab-content bookmarks">
+  <div class="results-grid" id="bookmarks-list">
+    <p class="no-results">No bookmarks saved yet. Click &#9734; on a recipe to save it.</p>
+  </div>
+</div>
+{% endblock %}

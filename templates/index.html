@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}The Culinary Index - Recipe Search{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Search thousands of recipes</h1>
+  <p class="subtitle">One search across Food Fusion, SuperChef, Tasty, and the web.</p>
+</section>
+
+<form class="search-bar" action="/search" method="GET">
+  <input type="text" name="q" placeholder="Search recipes... (e.g. chicken, biryani, pasta)" autofocus required>
+  <button type="submit">Search</button>
+</form>
+
+<section class="info-cards">
+  <div class="info-card">
+    <h3>Food Fusion</h3>
+    <p>Pakistani &amp; international recipes</p>
+  </div>
+  <div class="info-card">
+    <h3>SuperChef</h3>
+    <p>Pakistan's #1 cooking platform</p>
+  </div>
+  <div class="info-card">
+    <h3>Tasty</h3>
+    <p>Recipes with prep times</p>
+  </div>
+  <div class="info-card">
+    <h3>Web</h3>
+    <p>Extended search via DuckDuckGo</p>
+  </div>
+</section>
+{% endblock %}
