@@ -1,0 +1,6 @@
+customtkinter==5.2.2
+requests==2.32.5
+beautifulsoup4==4.14.3
+ddgs==9.11.4
+Pillow==12.1.1
+lxml==6.0.2
