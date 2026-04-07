@@ -122,21 +122,51 @@ const SpeechManager = {
   recognition: null,
   init() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { const btn = document.getElementById('micBtn'); if (btn) btn.remove(); return; }
+    if (!SR) {
+      const btn = document.getElementById('micBtn');
+      if (btn) {
+        btn.title = 'Voice search not supported in this browser';
+        btn.style.opacity = '0.4';
+        btn.style.cursor = 'not-allowed';
+        btn.onclick = () => alert('Voice search requires Chrome on Android. Please use Chrome to search by voice.');
+      }
+      return;
+    }
     this.recognition = new SR();
     this.recognition.lang = 'en-US';
     this.recognition.interimResults = false;
+    this.recognition.continuous = false;
+    this.recognition.maxAlternatives = 1;
+
     this.recognition.onresult = (e) => {
       const text = e.results[0][0].transcript;
       const input = document.querySelector('.search-bar input[name="q"]');
       if (input) { input.value = text; input.form?.submit(); }
     };
-    this.recognition.onend = () => document.getElementById('micBtn')?.classList.remove('listening');
-    this.recognition.onerror = () => document.getElementById('micBtn')?.classList.remove('listening');
+
+    this.recognition.onend = () => {
+      document.getElementById('micBtn')?.classList.remove('listening');
+    };
+
+    this.recognition.onerror = (e) => {
+      document.getElementById('micBtn')?.classList.remove('listening');
+      if (e.error === 'not-allowed') {
+        alert('Microphone permission denied. Please allow microphone access in your browser settings.');
+      } else if (e.error === 'no-speech') {
+        // Silently retry - user didn't speak
+      } else if (e.error === 'network') {
+        alert('Voice search requires an internet connection.');
+      }
+    };
+
     document.getElementById('micBtn')?.addEventListener('click', () => {
       if (!this.recognition) return;
-      try { this.recognition.start(); document.getElementById('micBtn').classList.add('listening'); }
-      catch(e) { /* already listening */ }
+      try {
+        this.recognition.start();
+        document.getElementById('micBtn').classList.add('listening');
+      } catch(e) {
+        document.getElementById('micBtn')?.classList.remove('listening');
+      }
     });
   }
 };
