@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}The Culinary Index{% endblock %}</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e1e2e">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <style>
     /* Critical inline CSS - shows even before external CSS loads */
@@ -59,7 +61,7 @@
 
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script>
-    // Remove loading overlay once page is fully loaded
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
     window.addEventListener('load', function() {
       var overlay = document.getElementById('loading-overlay');
       if (overlay) {

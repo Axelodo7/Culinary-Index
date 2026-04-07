@@ -7,10 +7,7 @@
   <p class="subtitle">One search across Food Fusion, SuperChef, Tasty, and the web.</p>
 </section>
 
-<form class="search-bar" action="/search" method="GET">
-  <input type="text" name="q" placeholder="Search recipes... (e.g. chicken, biryani, pasta)" autofocus required>
-  <button type="submit">Search</button>
-</form>
+{% include "_search_form.html" %}
 
 <section class="info-cards">
   <div class="info-card">

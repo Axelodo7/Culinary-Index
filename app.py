@@ -70,6 +70,16 @@ def api_search():
     return jsonify({"query": query, "count": len(results), "results": results})
 
 
+@app.route("/manifest.json")
+def manifest():
+    return app.send_static_file("manifest.json")
+
+
+@app.route("/sw.js")
+def sw():
+    return app.send_static_file("service-worker.js")
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

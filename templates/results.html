@@ -2,10 +2,7 @@
 {% block title %}{{ query }} - The Culinary Index{% endblock %}
 
 {% block content %}
-<form class="search-bar" action="/search" method="GET">
-  <input type="text" name="q" value="{{ query }}" autofocus required>
-  <button type="submit">Search</button>
-</form>
+{% include "_search_form.html" %}
 
 <div class="status-bar">
   <span>{{ total_count }} results for "{{ query }}" ({{ elapsed }}s)</span>

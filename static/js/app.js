@@ -117,12 +117,36 @@ function escHtml(str) {
   return d.innerHTML;
 }
 
+// ===== Speech Recognition =====
+const SpeechManager = {
+  recognition: null,
+  init() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { const btn = document.getElementById('micBtn'); if (btn) btn.remove(); return; }
+    this.recognition = new SR();
+    this.recognition.lang = 'en-US';
+    this.recognition.interimResults = false;
+    this.recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      const input = document.querySelector('.search-bar input[name="q"]');
+      if (input) { input.value = text; input.form?.submit(); }
+    };
+    this.recognition.onend = () => document.getElementById('micBtn')?.classList.remove('listening');
+    this.recognition.onerror = () => document.getElementById('micBtn')?.classList.remove('listening');
+    document.getElementById('micBtn')?.addEventListener('click', () => {
+      if (!this.recognition) return;
+      try { this.recognition.start(); document.getElementById('micBtn').classList.add('listening'); }
+      catch(e) { /* already listening */ }
+    });
+  }
+};
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
   ThemeManager.init();
+  SpeechManager.init();
   initBookmarks();
   updateBookmarkCount();
-  // If bookmarks tab exists, wire up click to refresh
   const bmLabel = document.querySelector('label[for="tab-bookmarks"]');
   if (bmLabel) bmLabel.addEventListener('click', () => setTimeout(showBookmarks, 50));
 });

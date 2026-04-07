@@ -288,3 +288,13 @@ body {
   opacity: 0;
   pointer-events: none;
 }
+
+/* Mic Button */
+.mic-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-secondary);
+  padding: 0.5rem 0.7rem; border-radius: var(--radius); cursor: pointer;
+  font-size: 1.2rem; transition: color 0.2s, border-color 0.2s;
+}
+.mic-btn:hover { color: var(--accent); border-color: var(--accent); }
+.mic-btn.listening { color: var(--accent); border-color: var(--accent); animation: micPulse 1.2s infinite; }
+@keyframes micPulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }

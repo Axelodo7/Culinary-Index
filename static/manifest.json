@@ -1,0 +1,15 @@
+{
+  "name": "The Culinary Index",
+  "short_name": "CulinaryIndex",
+  "description": "Search recipes across Food Fusion, SuperChef, Tasty, and the web",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e1e2e",
+  "theme_color": "#1e1e2e",
+  "icons": [{
+    "src": "/static/icon-512.png",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "any maskable"
+  }]
+}

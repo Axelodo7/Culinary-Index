@@ -1,0 +1,5 @@
+<form class="search-bar" action="/search" method="GET">
+  <input type="text" name="q" value="{{ query|default('') }}" placeholder="Search recipes... (e.g. chicken, biryani, pasta)" autofocus required>
+  <button type="button" id="micBtn" class="mic-btn" title="Voice search">&#127908;</button>
+  <button type="submit">Search</button>
+</form>
