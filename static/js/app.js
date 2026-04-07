@@ -143,7 +143,10 @@ const SpeechManager = {
 
 // ===== Install Banner =====
 function dismissInstall() {
-  localStorage.setItem('install_dismissed', '1');
+  const dontShow = document.getElementById('dontShowAgain');
+  if (dontShow && dontShow.checked) {
+    localStorage.setItem('install_permanently_dismissed', '1');
+  }
   document.getElementById('installBanner').style.display = 'none';
 }
 
@@ -155,8 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateBookmarkCount();
   const bmLabel = document.querySelector('label[for="tab-bookmarks"]');
   if (bmLabel) bmLabel.addEventListener('click', () => setTimeout(showBookmarks, 50));
-  // Show install banner on mobile if not dismissed
-  if (!localStorage.getItem('install_dismissed') && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  // Show install banner on mobile unless permanently dismissed
+  if (!localStorage.getItem('install_permanently_dismissed') && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     document.getElementById('installBanner').style.display = 'block';
   }
 });

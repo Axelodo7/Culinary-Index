@@ -435,7 +435,7 @@ body {
 .install-banner {
   background: linear-gradient(135deg, var(--bg-card), var(--bg-input));
   border-bottom: 1px solid var(--border);
-  padding: 0.6rem 0;
+  padding: 0.5rem 0 0.4rem;
 }
 .install-banner .container {
   display: flex;
@@ -468,6 +468,20 @@ body {
   cursor: pointer;
   padding: 0 0.25rem;
   line-height: 1;
+}
+.install-dont-show {
+  text-align: center;
+  padding-top: 0.3rem;
+}
+.install-dont-show label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.install-dont-show input[type="checkbox"] {
+  accent-color: var(--accent);
+  margin-right: 0.3rem;
+  cursor: pointer;
 }
 @media (min-width: 769px) {
   .install-banner { display: none !important; }
