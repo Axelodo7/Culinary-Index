@@ -1,5 +1,5 @@
-const CACHE = 'culinary-v4';
-const ASSETS = ['/', '/static/css/style.css?v=3', '/static/js/app.js?v=3', '/manifest.json'];
+const CACHE = 'culinary-v5';
+const ASSETS = ['/', '/static/css/style.css?v=4', '/static/js/app.js?v=4', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
