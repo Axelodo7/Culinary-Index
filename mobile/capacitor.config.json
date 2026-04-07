@@ -5,7 +5,7 @@
   "server": {
     "url": "https://culinary-index.onrender.com",
     "cleartext": true,
-    "allowNavigation": ["*.foodfusion.com", "*.superchef.pk", "*.tasty.co", "*"]
+    "allowNavigation": ["culinary-index.onrender.com", "localhost"]
   },
   "plugins": {
     "SplashScreen": {
@@ -18,7 +18,8 @@
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
-    "webContentsDebuggingEnabled": true
+    "webContentsDebuggingEnabled": true,
+    "backgroundColor": "#1a1410"
   },
   "ios": {
     "contentInset": "automatic",

@@ -13,15 +13,14 @@ logger = logging.getLogger("app")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "culinary-index-secret")
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 1 year for static files
 
 
 @app.after_request
 def add_cache_headers(response):
-    if request.path.startswith('/static/'):
+    # Only service-worker itself should never be cached
+    if request.path == '/sw.js':
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
     return response
 
 
@@ -82,9 +81,7 @@ def api_search():
 
 @app.route("/manifest.json")
 def manifest():
-    resp = app.send_static_file("manifest.json")
-    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    return resp
+    return app.send_static_file("manifest.json")
 
 
 @app.route("/sw.js")

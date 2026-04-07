@@ -162,4 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!localStorage.getItem('install_permanently_dismissed') && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     document.getElementById('installBanner').style.display = 'block';
   }
+  // Show back button on search/results pages
+  const backBtn = document.getElementById('backBtn');
+  if (backBtn && window.location.pathname !== '/') {
+    backBtn.style.display = 'flex';
+  }
 });
