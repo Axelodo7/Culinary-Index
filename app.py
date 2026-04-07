@@ -13,6 +13,7 @@ logger = logging.getLogger("app")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "culinary-index-secret")
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 
 @app.route("/")
@@ -72,12 +73,16 @@ def api_search():
 
 @app.route("/manifest.json")
 def manifest():
-    return app.send_static_file("manifest.json")
+    resp = app.send_static_file("manifest.json")
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return resp
 
 
 @app.route("/sw.js")
 def sw():
-    return app.send_static_file("service-worker.js")
+    resp = app.send_static_file("service-worker.js")
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return resp
 
 
 if __name__ == "__main__":
