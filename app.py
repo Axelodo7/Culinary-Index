@@ -16,6 +16,15 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "culinary-index-secret")
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 
+@app.after_request
+def add_cache_headers(response):
+    if request.path.startswith('/static/'):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 @app.route("/")
 def index():
     return render_template("index.html")

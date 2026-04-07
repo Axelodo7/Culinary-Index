@@ -6,7 +6,7 @@
   <title>{% block title %}The Culinary Index{% endblock %}</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1a1410">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3">
   <style>
     /* Critical inline CSS - shows even before external CSS loads */
     #loading-overlay {
@@ -59,7 +59,7 @@
     </div>
   </footer>
 
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=3"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
     window.addEventListener('load', function() {
