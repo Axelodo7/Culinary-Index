@@ -1,0 +1,23 @@
+app:
+  name: culinary-index
+  services:
+    - name: web
+      type: web
+      instance_type: nano
+      env: python
+      build:
+        type: buildpack
+      run: gunicorn app:app --workers 2 --worker-class gthread --threads 8 --bind 0.0.0.0:$PORT
+      ports:
+        - port: 8000
+          protocol: http
+      routes:
+        - path: /
+          port: 8000
+      healthchecks:
+        - http:
+            path: /
+            port: 8000
+            interval: 30s
+            timeout: 5s
+            grace_period: 30s
