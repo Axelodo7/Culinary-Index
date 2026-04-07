@@ -141,6 +141,12 @@ const SpeechManager = {
   }
 };
 
+// ===== Install Banner =====
+function dismissInstall() {
+  localStorage.setItem('install_dismissed', '1');
+  document.getElementById('installBanner').style.display = 'none';
+}
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
   ThemeManager.init();
@@ -149,4 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateBookmarkCount();
   const bmLabel = document.querySelector('label[for="tab-bookmarks"]');
   if (bmLabel) bmLabel.addEventListener('click', () => setTimeout(showBookmarks, 50));
+  // Show install banner on mobile if not dismissed
+  if (!localStorage.getItem('install_dismissed') && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    document.getElementById('installBanner').style.display = 'block';
+  }
 });

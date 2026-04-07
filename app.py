@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, render_template_string, request, jsonify
 from scrapers.engine import run_all_scrapers
 
 # Configure logging
@@ -92,6 +92,30 @@ def sw():
     resp = app.send_static_file("service-worker.js")
     resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     return resp
+
+
+@app.route("/download")
+def download():
+    from flask import send_from_directory
+    import os
+    apk_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mobile", "android", "app", "build", "outputs", "apk", "debug")
+    if os.path.exists(os.path.join(apk_path, "app-debug.apk")):
+        return send_from_directory(apk_path, "app-debug.apk", as_attachment=True, download_name="CulinaryIndex.apk")
+    return render_template_string(
+        "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "<link rel='stylesheet' href='/static/css/style.css?v=3'></head><body>"
+        "<div style='max-width:500px;margin:3rem auto;padding:2rem;text-align:center;font-family:Inter,system-ui,sans-serif;'>"
+        "<h1 style='color:var(--accent);'>App Not Ready Yet</h1>"
+        "<p style='color:var(--text-secondary);margin-top:1rem;'>The APK hasn't been built yet. "
+        "Run these commands on your PC:</p>"
+        "<pre style='background:var(--bg-card);padding:1rem;border-radius:8px;text-align:left;margin:1rem 0;font-size:0.85rem;overflow-x:auto;'>"
+        "cd C:\\Users\\Ayyan\\CulinaryIndex\\mobile\n"
+        "npx cap sync android\n"
+        ".\\android\\gradlew.bat assembleDebug</pre>"
+        "<p style='color:var(--text-secondary);font-size:0.85rem;'>Then place the APK at <code>mobile/android/app/build/outputs/apk/debug/app-debug.apk</code></p>"
+        "<a href='/' style='display:inline-block;margin-top:1.5rem;color:var(--accent);text-decoration:none;font-weight:600;'>&larr; Back to search</a>"
+        "</div></body></html>"
+    )
 
 
 if __name__ == "__main__":

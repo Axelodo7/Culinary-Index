@@ -430,3 +430,45 @@ body {
 .mic-btn:hover { color: var(--accent); border-color: var(--accent); }
 .mic-btn.listening { color: var(--accent); border-color: var(--accent); animation: micPulse 1.2s infinite; box-shadow: var(--glow); }
 @keyframes micPulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* Install Banner */
+.install-banner {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-input));
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0;
+}
+.install-banner .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.install-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  flex: 1;
+}
+.install-btn {
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  color: white;
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.install-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.install-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+@media (min-width: 769px) {
+  .install-banner { display: none !important; }
+}

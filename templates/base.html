@@ -49,6 +49,15 @@
     </div>
   </header>
 
+  <!-- Install App Banner (mobile only) -->
+  <div class="install-banner" id="installBanner" style="display:none;">
+    <div class="container">
+      <span class="install-text">Get the app for a better experience</span>
+      <a href="/download" class="install-btn">Install App</a>
+      <button class="install-close" onclick="dismissInstall()">&times;</button>
+    </div>
+  </div>
+
   <main class="container">
     {% block content %}{% endblock %}
   </main>
