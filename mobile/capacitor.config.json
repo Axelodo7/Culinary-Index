@@ -1,0 +1,27 @@
+{
+  "appId": "com.culinaryindex.app",
+  "appName": "The Culinary Index",
+  "webDir": "www",
+  "server": {
+    "url": "https://culinary-index.onrender.com",
+    "cleartext": true,
+    "allowNavigation": ["*.foodfusion.com", "*.superchef.pk", "*.tasty.co", "*"]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1a1410",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP"
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile"
+  }
+}
