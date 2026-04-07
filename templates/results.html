@@ -31,12 +31,15 @@
            data-prep-time="{{ r.prep_time }}">
         <h3>{{ r.title }}</h3>
         <p class="meta">
-          {{ r.source }}
-          {% if r.prep_time %} &middot; {{ r.prep_time }}{% endif %}
+          {% set source_class = r.source|lower|replace('food fusion','foodfusion')|replace('superchef','superchef')|replace('tasty','tasty')|replace('web:','web') %}
+          <span class="source-badge">
+            <span class="source-dot {{ source_class.split(':')[0] }}"></span>
+            {{ r.source }}
+          </span>
+          {% if r.prep_time %}<span>⏱ {{ r.prep_time }}</span>{% endif %}
         </p>
-        <p class="url-preview">{{ r.url }}</p>
         <div class="card-actions">
-          <a href="{{ r.url }}" target="_blank" rel="noopener" class="btn-open">Open Recipe</a>
+          <a href="{{ r.url }}" target="_blank" rel="noopener" class="btn-open">Open Recipe &#8594;</a>
           <button class="btn-bookmark" type="button" title="Bookmark">&#9734;</button>
         </div>
       </div>
@@ -57,10 +60,14 @@
            data-source="{{ r.source }}"
            data-prep-time="{{ r.prep_time }}">
         <h3>{{ r.title }}</h3>
-        <p class="meta">{{ r.source }}</p>
-        <p class="url-preview">{{ r.url }}</p>
+        <p class="meta">
+          <span class="source-badge">
+            <span class="source-dot web"></span>
+            {{ r.source }}
+          </span>
+        </p>
         <div class="card-actions">
-          <a href="{{ r.url }}" target="_blank" rel="noopener" class="btn-open">Open Recipe</a>
+          <a href="{{ r.url }}" target="_blank" rel="noopener" class="btn-open">Open Recipe &#8594;</a>
           <button class="btn-bookmark" type="button" title="Bookmark">&#9734;</button>
         </div>
       </div>
